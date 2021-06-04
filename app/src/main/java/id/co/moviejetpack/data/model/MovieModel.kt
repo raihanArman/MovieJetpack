@@ -1,4 +1,5 @@
-package id.co.moviejetpack.model
+package id.co.moviejetpack.data.model
+
 
 data class MovieModel (
     var movieId: String,

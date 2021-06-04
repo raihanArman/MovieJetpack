@@ -25,5 +25,5 @@ class ViewPagerAdapter(private val context: Context, fm: FragmentManager): Fragm
             else -> Fragment()
         }
 
-
+    override fun getPageTitle(position: Int): CharSequence? = context.resources.getString(TAB_TITLES[position])
 }

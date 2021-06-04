@@ -5,8 +5,8 @@
 
     <data>
         <variable
-            name="movie"
-            type="id.co.moviejetpack.data.source.remote.response.MovieResult" />
+            name="tvshow"
+            type="id.co.moviejetpack.data.source.remote.response.TvShowResult" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -31,7 +31,7 @@
 
                 <ImageView
                     android:id="@+id/iv_poster"
-                    app:imageUrl="@{movie.posterPath}"
+                    app:imageUrl="@{tvshow.posterPath}"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="centerCrop" />
@@ -50,7 +50,7 @@
             android:textColor="@color/black"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:text="@{movie.originalTitle}"
+            android:text="@{tvshow.originalName}"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/cardView"
             app:layout_constraintTop_toTopOf="parent"
@@ -82,7 +82,7 @@
             android:layout_marginEnd="8dp"
             android:layout_marginRight="8dp"
             android:textSize="14sp"
-            app:releaseFormat="@{movie.releaseDate}"
+            app:releaseFormat="@{tvshow.firstAirDate}"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/cardView"
             app:layout_constraintTop_toBottomOf="@+id/textView"
@@ -110,7 +110,7 @@
             android:layout_marginStart="8dp"
             android:layout_marginLeft="8dp"
             android:textSize="14sp"
-            android:text="@{movie.overview}"
+            android:text="@{tvshow.overview}"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView4"
@@ -137,7 +137,7 @@
             android:textColor="@color/black"
             android:textSize="14sp"
             android:textStyle="bold"
-            app:parseVoteAvarage="@{movie.voteAverage}"
+            app:parseVoteAvarage="@{tvshow.voteAverage}"
             app:layout_constraintBottom_toBottomOf="@+id/textView6"
             app:layout_constraintStart_toEndOf="@+id/textView6"
             app:layout_constraintTop_toTopOf="@+id/textView6" />
