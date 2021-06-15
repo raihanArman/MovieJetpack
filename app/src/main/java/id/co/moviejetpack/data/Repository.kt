@@ -1,137 +1,134 @@
 package id.co.moviejetpack.data
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.paging.LivePagedListBuilder
+import androidx.paging.PagedList
+import id.co.moviejetpack.data.source.MovieDataSource
+import id.co.moviejetpack.data.source.NetworkBoundResource
+import id.co.moviejetpack.data.source.local.LocalDataSource
+import id.co.moviejetpack.data.source.local.entity.MovieEntity
+import id.co.moviejetpack.data.source.local.entity.TvShowEntity
 import id.co.moviejetpack.data.source.remote.RemoteDataSource
-import id.co.moviejetpack.data.source.remote.response.MovieResponse
 import id.co.moviejetpack.data.source.remote.response.MovieResult
-import id.co.moviejetpack.data.source.remote.response.TvShowResponse
 import id.co.moviejetpack.data.source.remote.response.TvShowResult
-import id.co.moviejetpack.utils.EspressoIdlingResource
-import id.co.moviejetpack.utils.Resource
-import java.io.IOException
+import id.co.studikasus.data.source.remote.ApiResponse
+import id.co.studikasus.vo.Resource
 import javax.inject.Inject
 
 class Repository @Inject constructor(
-    private val remoteDataSource: RemoteDataSource
-){
-    suspend fun getMoviesRequest(
-        apiKey: String,
-        lng: String,
-        page: String
-    ): LiveData<Resource<MovieResponse>> {
-        EspressoIdlingResource.increment()
-        val movieResultsMutable = MutableLiveData<Resource<MovieResponse>>()
-        movieResultsMutable.postValue(Resource.Loading())
-        try{
-            val response = remoteDataSource.getMoviesRequest(apiKey, lng, page)
-            if(response.isSuccessful){
-                response.body()?.let {
-                    movieResultsMutable.postValue(Resource.Success(it))
-                    EspressoIdlingResource.decrement()
+    private val remoteDataSource: RemoteDataSource,
+    private val localDataSource: LocalDataSource
+): MovieDataSource{
+
+    override fun getAllMovies(): LiveData<Resource<PagedList<MovieEntity>>> {
+        return object : NetworkBoundResource<PagedList<MovieEntity>, List<MovieResult>>(){
+            override fun loadFromDB(): LiveData<PagedList<MovieEntity>> {
+                val config = PagedList.Config.Builder().apply {
+                    setEnablePlaceholders(false)
+                    setInitialLoadSizeHint(4)
+                    setPageSize(4)
+                }.build()
+
+                return LivePagedListBuilder(localDataSource.getMoviesList(), config).build()
+            }
+
+            override fun shouldFetch(data: PagedList<MovieEntity>?): Boolean =
+                data == null || data.isEmpty()
+
+            override fun createCall(): LiveData<ApiResponse<List<MovieResult>>> =
+                remoteDataSource.getMoviesRequest()
+
+            override fun saveCallResult(data: List<MovieResult>) {
+                val movieList = ArrayList<MovieEntity>()
+                for(item in data){
+                    val movie = MovieEntity(
+                        null,
+                        item.id,
+                        item.title,
+                        item.overview,
+                        item.posterPath,
+                        item.releaseDate,
+                        item.voteAverage.toString(),false
+                    )
+
+                    movieList.add(movie)
                 }
-            }else{
-                movieResultsMutable.postValue(Resource.Error(response.message()))
-                EspressoIdlingResource.decrement()
-            }
-        }catch (t: Throwable){
-            when(t){
-                is IOException -> movieResultsMutable.postValue(Resource.Error("Network Failure"))
-                else -> movieResultsMutable.postValue(Resource.Error("${t.message}"))
+
+                localDataSource.insertMovies(movieList)
             }
 
-            EspressoIdlingResource.decrement()
-        }
-
-        return movieResultsMutable
+        }.asLiveData()
     }
 
-    suspend fun getTvShowRequest(
-        apiKey: String,
-        lng: String,
-        page: String
-    ): LiveData<Resource<TvShowResponse>>{
-        EspressoIdlingResource.increment()
-        val tvShowResultsMutable = MutableLiveData<Resource<TvShowResponse>>()
-        tvShowResultsMutable.postValue(Resource.Loading())
-        try{
-            val response = remoteDataSource.getTvShowRequest(apiKey, lng, page)
-            if(response.isSuccessful){
-                response.body()?.let {
-                    tvShowResultsMutable.postValue(Resource.Success(it))
-                    EspressoIdlingResource.decrement()
-                }
-            }else{
-                tvShowResultsMutable.postValue(Resource.Error(response.message()))
-                EspressoIdlingResource.decrement()
-            }
-        }catch (t: Throwable){
-            when(t){
-                is IOException -> tvShowResultsMutable.postValue(Resource.Error("Network Failure"))
-                else -> tvShowResultsMutable.postValue(Resource.Error("${t.message}"))
-            }
-            EspressoIdlingResource.decrement()
-        }
+    override fun getAllTvShow(): LiveData<Resource<PagedList<TvShowEntity>>> {
+        return object:  NetworkBoundResource<PagedList<TvShowEntity>, List<TvShowResult>>(){
+            override fun loadFromDB(): LiveData<PagedList<TvShowEntity>> {
+                val config = PagedList.Config.Builder().apply {
+                    setEnablePlaceholders(false)
+                    setInitialLoadSizeHint(4)
+                    setPageSize(4)
+                }.build()
 
-        return tvShowResultsMutable
+                return LivePagedListBuilder(localDataSource.getTvShowsList(), config).build()
+            }
+
+            override fun shouldFetch(data: PagedList<TvShowEntity>?): Boolean =
+                data == null || data.isEmpty()
+
+            override fun createCall(): LiveData<ApiResponse<List<TvShowResult>>> =
+                remoteDataSource.getTvShowRequest()
+
+            override fun saveCallResult(data: List<TvShowResult>) {
+                val tvShowList = ArrayList<TvShowEntity>()
+                for(item in data){
+                    val tvShow = TvShowEntity(
+                        null,
+                        item.id,
+                        item.name,
+                        item.overview,
+                        item.posterPath,
+                        item.firstAirDate,
+                        item.voteAverage.toString(), false
+                    )
+
+                    tvShowList.add(tvShow)
+                }
+
+                localDataSource.insertTvShows(tvShowList)
+            }
+
+        }.asLiveData()
     }
 
-    suspend fun getMovieDetailRequest(
-        id: Int,
-        apiKey: String,
-        lng: String
-    ): LiveData<Resource<MovieResult>>{
-        EspressoIdlingResource.increment()
-        val movieResultsMutable = MutableLiveData<Resource<MovieResult>>()
-        movieResultsMutable.postValue(Resource.Loading())
-        try{
-            val response = remoteDataSource.getMovieDetailRequest(id, apiKey, lng)
-            if(response.isSuccessful){
-                response.body()?.let {
-                    movieResultsMutable.postValue(Resource.Success(it))
-                    EspressoIdlingResource.decrement()
-                }
-            }else{
-                movieResultsMutable.postValue(Resource.Error(response.message()))
-                EspressoIdlingResource.decrement()
-            }
-        }catch (t: Throwable){
-            when(t){
-                is IOException -> movieResultsMutable.postValue(Resource.Error("Network Failure"))
-                else -> movieResultsMutable.postValue(Resource.Error("${t.message}"))
-            }
-            EspressoIdlingResource.decrement()
-        }
-        return movieResultsMutable
+    override fun getMovieDetail(movieId: Int): LiveData<MovieEntity>  =
+        localDataSource.getDetailMovie(movieId)
+
+    override fun getTvShowDetail(tvShowId: Int): LiveData<TvShowEntity> =
+        localDataSource.getDetailTvShow(tvShowId)
+
+    override fun setMovieFavorite(movie: MovieEntity) =
+        localDataSource.setFavoriteMovie(movie)
+
+    override fun setTvShowFavorite(tvShow: TvShowEntity) =
+        localDataSource.setFavoriteTvShow(tvShow)
+
+    override fun getMoviesFavorite(): LiveData<PagedList<MovieEntity>> {
+        val config = PagedList.Config.Builder().apply {
+            setEnablePlaceholders(false)
+            setInitialLoadSizeHint(4)
+            setPageSize(4)
+        }.build()
+        return LivePagedListBuilder(localDataSource.getMoviesFavorite(), config).build()
     }
 
-    suspend fun getTvShowDetailRequest(
-        id: Int,
-        apiKey: String,
-        lng: String
-    ): LiveData<Resource<TvShowResult>>{
-        EspressoIdlingResource.increment()
-        val tvShowResultsMutable = MutableLiveData<Resource<TvShowResult>>()
-        tvShowResultsMutable.postValue(Resource.Loading())
-        try{
-            val response = remoteDataSource.getTvShowDetailRequest(id, apiKey, lng)
-            if(response.isSuccessful){
-                response.body()?.let {
-                    tvShowResultsMutable.postValue(Resource.Success(it))
-                    EspressoIdlingResource.decrement()
-                }
-            }else{
-                tvShowResultsMutable.postValue(Resource.Error(response.message()))
-                EspressoIdlingResource.decrement()
-            }
-        }catch (t: Throwable){
-            when(t){
-                is IOException -> tvShowResultsMutable.postValue(Resource.Error("Network Failure"))
-                else -> tvShowResultsMutable.postValue(Resource.Error("${t.message}"))
-            }
-            EspressoIdlingResource.decrement()
-        }
-        return tvShowResultsMutable
+    override fun getTvShowsFavorite(): LiveData<PagedList<TvShowEntity>> {
+        val config = PagedList.Config.Builder().apply {
+            setEnablePlaceholders(false)
+            setInitialLoadSizeHint(4)
+            setPageSize(4)
+        }.build()
+        return LivePagedListBuilder(localDataSource.getTvShowsFavorite(), config).build()
     }
+
 
 }

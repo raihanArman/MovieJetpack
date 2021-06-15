@@ -6,4 +6,7 @@ object Constant {
     const val API_KEY = "1ec1268dfc408a005aa8f2b6dd5bc620"
     const val MOVIE_ID_KEY = "movie_id"
     const val TV_ID_KEY = "tv_id"
+
+
+    const val DATABASE_NAME = "movie_database"
 }

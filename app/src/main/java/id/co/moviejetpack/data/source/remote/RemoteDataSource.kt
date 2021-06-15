@@ -1,31 +1,54 @@
 package id.co.moviejetpack.data.source.remote
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.liveData
 import id.co.moviejetpack.data.source.remote.request.ApiService
-import id.co.moviejetpack.data.source.remote.response.MovieResponse
 import id.co.moviejetpack.data.source.remote.response.MovieResult
-import id.co.moviejetpack.data.source.remote.response.TvShowResponse
 import id.co.moviejetpack.data.source.remote.response.TvShowResult
-import retrofit2.Response
+import id.co.moviejetpack.utils.Constant
+import id.co.moviejetpack.utils.EspressoIdlingResource
+import id.co.studikasus.data.source.remote.ApiResponse
+import kotlinx.coroutines.Dispatchers.IO
 import javax.inject.Inject
 
 class RemoteDataSource @Inject constructor(
     private val apiService: ApiService
 ){
 
-    suspend fun getMoviesRequest(apiKey: String, lng: String, page: String): Response<MovieResponse>{
-        return apiService.getMovies(apiKey, lng, page)
+    fun getMoviesRequest(): LiveData<ApiResponse<List<MovieResult>>> = liveData(IO){
+        EspressoIdlingResource.increment()
+        val response = apiService.getMovies(Constant.API_KEY)
+        if(response.isSuccessful){
+            emit(ApiResponse.success(response.body()!!.results))
+            EspressoIdlingResource.decrement()
+        }
     }
 
-    suspend fun getTvShowRequest(apiKey: String, lng: String, page: String): Response<TvShowResponse>{
-        return apiService.getTvShows(apiKey, lng, page)
+    fun getTvShowRequest(): LiveData<ApiResponse<List<TvShowResult>>> = liveData(IO){
+        EspressoIdlingResource.increment()
+        val response = apiService.getTvShows(Constant.API_KEY)
+        if(response.isSuccessful){
+            emit(ApiResponse.success(response.body()!!.results))
+            EspressoIdlingResource.decrement()
+        }
     }
 
-    suspend fun getMovieDetailRequest(id: Int, apiKey: String, lng: String): Response<MovieResult>{
-        return apiService.getMovieDetails(id, apiKey, lng)
+    fun getMovieDetailRequest(id: Int): LiveData<ApiResponse<MovieResult>> = liveData(IO){
+        EspressoIdlingResource.increment()
+        val response = apiService.getMovieDetails(id, Constant.API_KEY)
+        if(response.isSuccessful){
+            emit(ApiResponse.success(response.body()!!))
+            EspressoIdlingResource.decrement()
+        }
     }
 
-    suspend fun getTvShowDetailRequest(id: Int, apiKey: String, lng: String): Response<TvShowResult>{
-        return apiService.getTvShowDetails(id, apiKey, lng)
+    fun getTvShowDetailRequest(id: Int): LiveData<ApiResponse<TvShowResult>> = liveData(IO){
+        EspressoIdlingResource.increment()
+        val response = apiService.getTvShowDetails(id, Constant.API_KEY)
+        if(response.isSuccessful){
+            emit(ApiResponse.success(response.body()!!))
+            EspressoIdlingResource.decrement()
+        }
     }
 
 }

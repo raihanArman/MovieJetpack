@@ -6,7 +6,7 @@
     <data>
         <variable
             name="tvshow"
-            type="id.co.moviejetpack.data.source.remote.response.TvShowResult" />
+            type="id.co.moviejetpack.data.source.local.entity.TvShowEntity" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -46,7 +46,7 @@
             android:maxLines="1"
             android:textColor="@android:color/black"
             android:textSize="18sp"
-            android:text="@{tvshow.originalName}"
+            android:text="@{tvshow.title}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

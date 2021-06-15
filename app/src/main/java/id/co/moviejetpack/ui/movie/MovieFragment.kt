@@ -9,33 +9,30 @@ import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
+import androidx.paging.PagedList
 import androidx.recyclerview.widget.GridLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import id.co.moviejetpack.R
-import id.co.moviejetpack.data.source.remote.response.MovieResponse
+import id.co.moviejetpack.data.source.local.entity.MovieEntity
 import id.co.moviejetpack.databinding.FragmentMovieBinding
-import id.co.moviejetpack.utils.Constant
-import id.co.moviejetpack.utils.EspressoIdlingResource
-import id.co.moviejetpack.utils.Resource
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import id.co.studikasus.vo.Status
 
 
 @AndroidEntryPoint
 class MovieFragment : Fragment() {
 
-    private lateinit var binding: FragmentMovieBinding
     private lateinit var movieAdapter: MovieAdapter
     private val viewModel: MovieViewModel by viewModels()
+
+    private var _binding: FragmentMovieBinding?= null
+    private val binding get() = _binding!!
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        binding = DataBindingUtil.inflate(inflater, R.layout.fragment_movie, container, false)
+        _binding = DataBindingUtil.inflate(inflater, R.layout.fragment_movie, container, false)
         return binding.root
     }
 
@@ -44,30 +41,28 @@ class MovieFragment : Fragment() {
         if(activity != null){
             movieAdapter = MovieAdapter()
 
-             viewLifecycleOwner.lifecycleScope.launch {
-                viewModel.getMovies(Constant.API_KEY, "en-US", "1")
-                    .observe(viewLifecycleOwner, Observer {response ->
-                        when(response){
-                            is Resource.Success ->{
-                                binding.progressBar.visibility = View.GONE
-                                setMoviesData(response.data)
-                            }
-                            is Resource.Loading ->{
-                                binding.progressBar.visibility = View.VISIBLE
-                            }
-                            is Resource.Error ->{
-                                binding.progressBar.visibility = View.GONE
-                                Toast.makeText(requireActivity(), "${response.message}", Toast.LENGTH_SHORT).show()
-                            }
+            viewModel.getMovies()
+                .observe(viewLifecycleOwner, Observer {response ->
+                    when(response.status){
+                        Status.SUCCESS ->{
+                            binding.progressBar.visibility = View.GONE
+                            setMoviesData(response.data)
                         }
-                    })
-            }
+                        Status.LOADING ->{
+                            binding.progressBar.visibility = View.VISIBLE
+                        }
+                        Status.ERROR ->{
+                            binding.progressBar.visibility = View.GONE
+                            Toast.makeText(requireActivity(), "${response.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                })
 
         }
     }
 
-    private fun setMoviesData(data: MovieResponse?) {
-        movieAdapter.setMovies(data?.results)
+    private fun setMoviesData(data: PagedList<MovieEntity>?) {
+        movieAdapter.submitList(data)
         binding.rvMovie.apply {
             val gridLayout = GridLayoutManager(context, 2)
             layoutManager = gridLayout
@@ -75,4 +70,11 @@ class MovieFragment : Fragment() {
             adapter = movieAdapter
         }
     }
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
+    }
+
 }

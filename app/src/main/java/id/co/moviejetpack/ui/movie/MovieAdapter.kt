@@ -1,33 +1,41 @@
 package id.co.moviejetpack.ui.movie
 
 import android.content.Intent
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
+import androidx.paging.PagedListAdapter
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import id.co.moviejetpack.R
+import id.co.moviejetpack.data.source.local.entity.MovieEntity
 import id.co.moviejetpack.databinding.ItemMovieBinding
-import id.co.moviejetpack.data.model.MovieModel
 import id.co.moviejetpack.data.source.remote.response.MovieResult
 import id.co.moviejetpack.utils.Constant
 
-class MovieAdapter: RecyclerView.Adapter<MovieAdapter.ViewHolder>() {
-    private var listMovies = ArrayList<MovieResult>()
+class MovieAdapter: PagedListAdapter<MovieEntity, MovieAdapter.ViewHolder>(DIFF_CALLBACK) {
 
-    fun setMovies(movies: List<MovieResult>?){
-        if(movies == null) return
-        this.listMovies.clear()
-        this.listMovies.addAll(movies)
+    companion object {
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<MovieEntity>() {
+            override fun areItemsTheSame(oldItem: MovieEntity, newItem: MovieEntity): Boolean {
+                return oldItem.movieId == newItem.movieId
+            }
+            override fun areContentsTheSame(oldItem: MovieEntity, newItem: MovieEntity): Boolean {
+                return oldItem == newItem
+            }
+        }
     }
+
     inner class ViewHolder(private val binding: ItemMovieBinding): RecyclerView.ViewHolder(binding.root){
-        fun bind(movieData: MovieResult){
+        fun bind(movieData: MovieEntity){
             with(binding){
                 movie = movieData
             }
 
             itemView.setOnClickListener {
                 val intent = Intent(itemView.context, DetailMovieActivity::class.java)
-                intent.putExtra(Constant.MOVIE_ID_KEY, movieData.id)
+                intent.putExtra(Constant.MOVIE_ID_KEY, movieData.movieId)
                 itemView.context.startActivity(intent)
             }
         }
@@ -40,10 +48,10 @@ class MovieAdapter: RecyclerView.Adapter<MovieAdapter.ViewHolder>() {
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val movie = listMovies[position]
-        holder.bind(movie)
+        val movie = getItem(position)
+        if(movie != null)
+            holder.bind(movie)
     }
 
-    override fun getItemCount(): Int = listMovies.size
 
 }

@@ -1,13 +1,14 @@
 <resources>
     <string name="app_name">Movie App</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="movie">Movie</string>
     <string name="tvshow">Tv Show</string>
     <string name="title">Title</string>
     <string name="release">Rilis</string>
-    <string name="duration">Duration</string>
     <string name="overview">Overview</string>
     <string name="detail_tv_show">Detail Tv Show</string>
     <string name="detail_movie">Detail Movie</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="home">Home</string>
+    <string name="favorite">Favorite</string>
 </resources>
